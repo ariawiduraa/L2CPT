@@ -1,0 +1,73 @@
+[+] Target: 192.168.56.7
+[+] Date: Sat May 23 10:35:37 AM EDT 2026
+
+=========================
+RECONNAISSANCE PHASE
+=========================
+[INFO] Open Ports Detected:
+22/tcp open  ssh     OpenSSH 10.0p2 Debian 7+deb13u2 (protocol 2.0)
+=========================
+DOCKER EXPOSURE CHECK
+=========================
+[OK] Docker API not exposed.
+=========================
+WEB ANALYSIS
+=========================
+
+=========================
+TRIVY VULNERABILITY SCAN
+=========================
+[CRITICAL] Critical CVEs detected in nextcloud:29.0.2-fpm-alpine!
+[HIGH] High severity vulnerabilities detected in nextcloud:29.0.2-fpm-alpine!
+[CRITICAL] Critical CVEs detected in mariadb:11.4!
+[HIGH] High severity vulnerabilities detected in mariadb:11.4!
+
+=========================
+DOCKER BENCH ASSESSMENT
+=========================
+[INFO] Docker Bench Warnings: 34
+=========================
+DOCKER ENUMERATION
+=========================
+[INFO] Running Containers:
+nextcloud-app
+nextcloud-db
+[INFO] Docker Networks:
+NETWORK ID     NAME                      DRIVER    SCOPE
+bd3e94d249a1   bridge                    bridge    local
+1920c99d646e   host                      host      local
+ed543dd375fa   nextcloud_nextcloud-net   bridge    local
+5212208983ab   none                      null      local
+
+=========================
+RISK SCORING
+=========================
+
+[+] Final Risk Score : 3/10
+
+[+] Security Level   : MODERATE
+
+
+=========================
+SEVERITY SUMMARY
+=========================
+
+Critical Findings : 2
+High Findings     : 2
+Medium Findings   : 0
+Low Findings      : 0
+
+=========================
+REMEDIATION RECOMMENDATIONS
+=========================
+
+[HIGH] Vulnerable Docker Images
+  - Update Docker images regularly to patch vulnerabilities.
+  - Use minimal and maintained base images.
+
+[MEDIUM] Patch Management
+  - Perform periodic vulnerability scanning.
+  - Apply regular security patch management.
+
+[INFO] Remediation analysis completed.
+

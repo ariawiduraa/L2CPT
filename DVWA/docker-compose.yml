@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    restart: no
+    privileged: true
+
+    ports:
+      - "8080:80"
+
+    environment:
+      MYSQL_USER: dvwa
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: dvwa
+      MYSQL_HOSTNAME: mariadb
+
+    depends_on:
+      - mariadb
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - internalnet
+
+  mariadb:
+    image: mariadb:10.1
+    container_name: mariadb
+    restart: always
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dvwa
+      MYSQL_USER: dvwa
+      MYSQL_PASSWORD: password
+
+    ports:
+      - "3306:3306"
+
+    networks:
+      - internalnet
+
+networks:
+  internalnet:
+    driver: bridge

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Scanning {{ target }} — L2CPT{% endblock %}
+
+{% block content %}
+
+<a href="/" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+</a>
+
+<div class="page-header">
+    <h1><i class="fas fa-satellite-dish scan-active-icon" style="background:none;-webkit-text-fill-color:var(--accent);font-size:1.8rem"></i> Assessment In Progress</h1>
+    <p>Running automated security assessment on target</p>
+</div>
+
+<!-- Target Info -->
+<div class="card animate-in">
+    <div class="section-header">
+        <h2><i class="fas fa-crosshairs"></i> Target</h2>
+        <span class="badge badge-info">
+            <i class="fas fa-spinner fa-spin"></i> Scanning
+        </span>
+    </div>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--cyan)">
+        {{ target }}
+    </p>
+
+    <!-- Progress -->
+    <div class="progress-container">
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill" style="width:5%"></div>
+        </div>
+        <div class="progress-info">
+            <span id="progress-phase">Initializing scan...</span>
+            <span class="progress-percent" id="progress-percent">5%</span>
+        </div>
+    </div>
+</div>
+
+<!-- Live Output -->
+<div class="card animate-in" style="animation-delay:0.1s">
+    <div class="section-header">
+        <h2><i class="fas fa-terminal"></i> Live Output</h2>
+    </div>
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">l2cpt.sh — {{ target }}</span>
+        </div>
+        <div class="terminal-body" id="terminal-output">
+            <pre id="output-pre">$ bash l2cpt.sh {{ target }}
+Initializing assessment framework...
+</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Completion Card (hidden initially) -->
+<div class="card animate-in" id="completion-card" style="display:none;animation-delay:0.2s">
+    <div class="section-header">
+        <h2><i class="fas fa-check-circle" style="color:var(--low)"></i> Assessment Complete</h2>
+    </div>
+    <p style="margin-bottom:16px;color:var(--text-secondary)">
+        The security assessment has been completed. View the detailed report below.
+    </p>
+    <div style="display:flex;gap:12px">
+        <a href="#" id="view-report-btn" class="btn btn-primary">
+            <i class="fas fa-file-alt"></i> View Report
+        </a>
+        <a href="/" class="btn btn-ghost">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scanId = "{{ scan_id }}";
+const terminalBody = document.getElementById('terminal-output');
+const outputPre = document.getElementById('output-pre');
+const progressFill = document.getElementById('progress-fill');
+const progressPercent = document.getElementById('progress-percent');
+const progressPhase = document.getElementById('progress-phase');
+const completionCard = document.getElementById('completion-card');
+const viewReportBtn = document.getElementById('view-report-btn');
+
+const phases = {
+    5: 'Initializing scan...',
+    15: 'Running reconnaissance (Nmap)...',
+    30: 'Checking Docker API exposure...',
+    45: 'Analyzing web services...',
+    55: 'Running Trivy vulnerability scan...',
+    70: 'Running Docker Bench assessment...',
+    80: 'Enumerating Docker containers...',
+    90: 'Calculating risk score...',
+    100: 'Assessment complete!'
+};
+
+function pollStatus() {
+    fetch('/api/scan/' + scanId)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'not_found') return;
+
+            // Update output
+            if (data.output) {
+                outputPre.textContent = data.output;
+                terminalBody.scrollTop = terminalBody.scrollHeight;
+            }
+
+            // Update progress
+            progressFill.style.width = data.progress + '%';
+            progressPercent.textContent = data.progress + '%';
+
+            // Update phase text
+            let phaseText = 'Processing...';
+            const keys = Object.keys(phases).map(Number).sort((a,b) => a-b);
+            for (const key of keys) {
+                if (data.progress >= key) phaseText = phases[key];
+            }
+            progressPhase.textContent = phaseText;
+
+            // Check completion
+            if (data.status === 'completed') {
+                completionCard.style.display = 'block';
+                if (data.report_name) {
+                    viewReportBtn.href = '/report/' + data.report_name;
+                }
+                progressFill.style.background = 'linear-gradient(90deg, var(--low), #059669)';
+                return;
+            }
+
+            if (data.status === 'error') {
+                progressPhase.textContent = 'Error occurred during scan';
+                progressFill.style.background = 'var(--critical)';
+                return;
+            }
+
+            // Continue polling
+            setTimeout(pollStatus, 2000);
+        })
+        .catch(() => {
+            setTimeout(pollStatus, 3000);
+        });
+}
+
+// Start polling
+setTimeout(pollStatus, 1000);
+</script>
+{% endblock %}

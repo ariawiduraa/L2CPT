@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}L2CPT Dashboard — Security Assessment{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1>Security Dashboard</h1>
+    <p>Real-time overview of your penetration testing assessments</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+
+    <div class="card stat-card animate-in">
+        <div class="stat-icon blue">
+            <i class="fas fa-crosshairs"></i>
+        </div>
+        <div class="stat-label">Total Scans</div>
+        <div class="stat-value" id="stat-total">{{ stats.total }}</div>
+        <div class="stat-sub">Assessment reports</div>
+    </div>
+
+    <div class="card stat-card accent-critical animate-in">
+        <div class="stat-icon red">
+            <i class="fas fa-skull-crossbones"></i>
+        </div>
+        <div class="stat-label">Critical Findings</div>
+        <div class="stat-value critical" id="stat-critical">{{ stats.critical }}</div>
+        <div class="stat-sub">Immediate action required</div>
+    </div>
+
+    <div class="card stat-card animate-in">
+        <div class="stat-icon orange">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <div class="stat-label">High Findings</div>
+        <div class="stat-value high" id="stat-high">{{ stats.high }}</div>
+        <div class="stat-sub">Significant risk</div>
+    </div>
+
+    <div class="card stat-card animate-in">
+        <div class="stat-icon cyan">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-label">Avg Risk Score</div>
+        <div class="stat-value">{{ stats.avg_score }}<span style="font-size:0.9rem;color:var(--text-dim)">/10</span></div>
+        <div class="stat-sub">Across all scans</div>
+    </div>
+
+</div>
+
+<!-- New Assessment -->
+<div class="card animate-in" style="animation-delay:0.3s">
+    <div class="section-header">
+        <h2><i class="fas fa-rocket"></i> New Assessment</h2>
+        <div class="chip">
+            <i class="fas fa-bolt"></i>
+            Automated Scan
+        </div>
+    </div>
+    <form method="POST" action="/scan" class="scan-form" id="scan-form">
+        <div class="input-wrapper">
+            <i class="fas fa-terminal"></i>
+            <input type="text" name="target" id="target-input"
+                   placeholder="Enter target IP or domain (e.g. 192.168.56.7)"
+                   required autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary" id="scan-btn">
+            <i class="fas fa-play"></i>
+            Execute Scan
+        </button>
+    </form>
+</div>
+
+<!-- Recent Reports -->
+<div class="card animate-in" style="animation-delay:0.4s">
+    <div class="section-header">
+        <h2><i class="fas fa-folder-open"></i> Recent Reports</h2>
+        <span class="chip">
+            <i class="fas fa-database"></i>
+            {{ reports|length }} report{{ 's' if reports|length != 1 }}
+        </span>
+    </div>
+
+    {% if reports %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Report</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                    <th>Risk Score</th>
+                    <th>Findings</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>
+                        <div class="file-name">
+                            <i class="far fa-file-code" style="color:var(--accent);margin-right:6px"></i>
+                            {{ report.name }}
+                        </div>
+                        <div class="target-ip">{{ report.date }}</div>
+                    </td>
+                    <td>
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.85rem">
+                            {{ report.target }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if report.level == "CRITICAL" %}
+                            <span class="badge badge-critical">
+                                <i class="fas fa-circle" style="font-size:5px"></i> Critical
+                            </span>
+                        {% elif report.level == "HIGH RISK" %}
+                            <span class="badge badge-high">
+                                <i class="fas fa-circle" style="font-size:5px"></i> High
+                            </span>
+                        {% elif report.level == "MODERATE" %}
+                            <span class="badge badge-medium">
+                                <i class="fas fa-circle" style="font-size:5px"></i> Moderate
+                            </span>
+                        {% elif report.level == "LOW RISK" %}
+                            <span class="badge badge-low">
+                                <i class="fas fa-circle" style="font-size:5px"></i> Low
+                            </span>
+                        {% else %}
+                            <span class="badge badge-info">
+                                <i class="fas fa-circle" style="font-size:5px"></i> {{ report.level }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="score-display">
+                            <span class="score-text" style="color:
+                                {% if report.score_num >= 9 %}var(--critical)
+                                {% elif report.score_num >= 6 %}var(--high)
+                                {% elif report.score_num >= 3 %}var(--medium)
+                                {% else %}var(--low){% endif %}">
+                                {{ report.score }}
+                            </span>
+                            <div class="score-bar">
+                                <div class="score-bar-fill" style="width:{{ report.score_num * 10 }}%;background:
+                                    {% if report.score_num >= 9 %}var(--critical)
+                                    {% elif report.score_num >= 6 %}var(--high)
+                                    {% elif report.score_num >= 3 %}var(--medium)
+                                    {% else %}var(--low){% endif %}">
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if report.critical > 0 %}
+                            <span style="color:var(--critical);font-weight:700;margin-right:6px">{{ report.critical }}C</span>
+                        {% endif %}
+                        {% if report.high > 0 %}
+                            <span style="color:var(--high);font-weight:700;margin-right:6px">{{ report.high }}H</span>
+                        {% endif %}
+                        {% if report.medium > 0 %}
+                            <span style="color:var(--medium);font-weight:700;margin-right:6px">{{ report.medium }}M</span>
+                        {% endif %}
+                        {% if report.low > 0 %}
+                            <span style="color:var(--low);font-weight:700">{{ report.low }}L</span>
+                        {% endif %}
+                        {% if report.total_findings == 0 %}
+                            <span style="color:var(--text-dim)">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/report/{{ report.name }}" class="view-link">
+                            View <i class="fas fa-arrow-right" style="font-size:0.7rem"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-shield-halved"></i>
+        <p>No reports yet. Run your first assessment to get started.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh stats every 15 seconds
+setInterval(function() {
+    fetch('/api/stats')
+        .then(r => r.json())
+        .then(data => {
+            const el = (id) => document.getElementById(id);
+            if (el('stat-total')) el('stat-total').textContent = data.total;
+            if (el('stat-critical')) el('stat-critical').textContent = data.critical;
+            if (el('stat-high')) el('stat-high').textContent = data.high;
+        })
+        .catch(() => {});
+}, 15000);
+</script>
+{% endblock %}

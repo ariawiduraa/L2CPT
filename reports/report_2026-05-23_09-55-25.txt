@@ -1,0 +1,87 @@
+[+] Target: 192.168.56.7
+[+] Date: Sat May 23 09:55:25 AM EDT 2026
+
+=========================
+RECONNAISSANCE PHASE
+=========================
+[INFO] Open Ports Detected:
+22/tcp   open  ssh     OpenSSH 10.0p2 Debian 7+deb13u2 (protocol 2.0)
+3306/tcp open  mysql   MariaDB 5.5.5-10.1.48
+8080/tcp open  http    Apache httpd 2.4.25 ((Debian))
+=========================
+DOCKER EXPOSURE CHECK
+=========================
+[OK] Docker API not exposed.
+=========================
+WEB ANALYSIS
+=========================
+[HIGH] Database Port Exposed (3306)
+
+=========================
+TRIVY VULNERABILITY SCAN
+=========================
+[CRITICAL] Critical CVEs detected in vulnerables/web-dvwa!
+[HIGH] High severity vulnerabilities detected in vulnerables/web-dvwa!
+[CRITICAL] Critical CVEs detected in mariadb:10.1!
+[HIGH] High severity vulnerabilities detected in mariadb:10.1!
+
+=========================
+DOCKER BENCH ASSESSMENT
+=========================
+[INFO] Docker Bench Warnings: 62
+[MEDIUM] Multiple Docker security misconfigurations detected.
+=========================
+DOCKER ENUMERATION
+=========================
+[INFO] Running Containers:
+dvwa
+mariadb
+[CRITICAL] dvwa running as privileged!
+[CRITICAL] docker.sock mounted in dvwa
+[INFO] Docker Networks:
+NETWORK ID     NAME               DRIVER    SCOPE
+bd3e94d249a1   bridge             bridge    local
+fee8146ab189   dvwa_internalnet   bridge    local
+1920c99d646e   host               host      local
+5212208983ab   none               null      local
+
+=========================
+RISK SCORING
+=========================
+
+[+] Final Risk Score : 9/10
+
+[+] Security Level   : CRITICAL
+
+
+=========================
+SEVERITY SUMMARY
+=========================
+
+Critical Findings : 4
+High Findings     : 3
+Medium Findings   : 1
+Low Findings      : 0
+
+=========================
+REMEDIATION RECOMMENDATIONS
+=========================
+
+[CRITICAL] Docker Socket Exposure
+  - Avoid mounting /var/run/docker.sock inside containers.
+  - Docker socket exposure may lead to full host compromise.
+
+[HIGH] Database Exposure
+  - Restrict database services using internal Docker networks.
+  - Avoid exposing database ports directly to external networks.
+
+[HIGH] Vulnerable Docker Images
+  - Update Docker images regularly to patch vulnerabilities.
+  - Use minimal and maintained base images.
+
+[MEDIUM] Patch Management
+  - Perform periodic vulnerability scanning.
+  - Apply regular security patch management.
+
+[INFO] Remediation analysis completed.
+

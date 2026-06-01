@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Report: {{ name }} — L2CPT{% endblock %}
+
+{% block content %}
+
+<a href="/" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+</a>
+
+<div class="page-header">
+    <h1>Assessment Report</h1>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--text-dim)">{{ name }}</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid">
+
+    <!-- Risk Score Gauge -->
+    <div class="card stat-card animate-in" style="text-align:center;
+        {% if parsed.score_num >= 9 %}border-top:3px solid var(--critical)
+        {% elif parsed.score_num >= 6 %}border-top:3px solid var(--high)
+        {% elif parsed.score_num >= 3 %}border-top:3px solid var(--medium)
+        {% else %}border-top:3px solid var(--low){% endif %}">
+        <div class="stat-label">Risk Score</div>
+        <div class="risk-gauge">
+            <div class="gauge-ring" style="background:
+                {% if parsed.score_num >= 9 %}var(--critical-bg)
+                {% elif parsed.score_num >= 6 %}var(--high-bg)
+                {% elif parsed.score_num >= 3 %}var(--medium-bg)
+                {% else %}var(--low-bg){% endif %};
+                border:3px solid
+                {% if parsed.score_num >= 9 %}var(--critical)
+                {% elif parsed.score_num >= 6 %}var(--high)
+                {% elif parsed.score_num >= 3 %}var(--medium)
+                {% else %}var(--low){% endif %}">
+                <div>
+                    <div class="gauge-value" style="color:
+                        {% if parsed.score_num >= 9 %}var(--critical)
+                        {% elif parsed.score_num >= 6 %}var(--high)
+                        {% elif parsed.score_num >= 3 %}var(--medium)
+                        {% else %}var(--low){% endif %}">
+                        {{ parsed.score_num }}
+                    </div>
+                    <div class="gauge-max">/10</div>
+                </div>
+            </div>
+        </div>
+        <div class="gauge-label" style="color:
+            {% if parsed.score_num >= 9 %}var(--critical)
+            {% elif parsed.score_num >= 6 %}var(--high)
+            {% elif parsed.score_num >= 3 %}var(--medium)
+            {% else %}var(--low){% endif %}">
+            {{ parsed.level }}
+        </div>
+    </div>
+
+    <!-- Finding Counts -->
+    <div class="card stat-card animate-in">
+        <div class="stat-icon red"><i class="fas fa-bug"></i></div>
+        <div class="stat-label">Critical</div>
+        <div class="stat-value critical">{{ parsed.critical }}</div>
+    </div>
+
+    <div class="card stat-card animate-in">
+        <div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-label">High</div>
+        <div class="stat-value high">{{ parsed.high }}</div>
+    </div>
+
+    <div class="card stat-card animate-in">
+        <div class="stat-icon green"><i class="fas fa-info-circle"></i></div>
+        <div class="stat-label">Medium / Low</div>
+        <div class="stat-value" style="color:var(--medium)">{{ parsed.medium }} <span style="color:var(--text-dim);font-size:1rem">/</span> <span style="color:var(--low)">{{ parsed.low }}</span></div>
+    </div>
+
+</div>
+
+<div class="detail-grid">
+
+    <!-- Open Ports -->
+    {% if parsed.ports %}
+    <div class="card animate-in">
+        <div class="section-header">
+            <h2><i class="fas fa-network-wired"></i> Open Ports</h2>
+            <span class="chip">{{ parsed.ports|length }} detected</span>
+        </div>
+        {% for port in parsed.ports %}
+        <div class="port-row">
+            <span class="port-number">{{ port.port }}</span>
+            <span class="port-service">{{ port.service }}</span>
+            <span class="port-version">{{ port.version }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Containers -->
+    {% if parsed.containers %}
+    <div class="card animate-in">
+        <div class="section-header">
+            <h2><i class="fab fa-docker"></i> Docker Containers</h2>
+            <span class="chip">{{ parsed.containers|length }} running</span>
+        </div>
+        {% for container in parsed.containers %}
+        <div class="port-row">
+            <span class="port-number"><i class="fas fa-cube" style="margin-right:6px;font-size:0.8rem"></i>{{ container }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Critical Findings -->
+{% if parsed.findings %}
+<div class="card animate-in">
+    <div class="section-header">
+        <h2><i class="fas fa-shield-virus"></i> Security Findings</h2>
+        <span class="chip">{{ parsed.findings|length }} total</span>
+    </div>
+    {% for finding in parsed.findings %}
+    <div class="finding-item {{ finding.severity|lower }}">
+        <span class="badge badge-{{ finding.severity|lower }}">{{ finding.severity }}</span>
+        <span class="finding-text">{{ finding.text }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Remediation Recommendations -->
+{% if parsed.remediations %}
+<div class="card animate-in">
+    <div class="section-header">
+        <h2><i class="fas fa-wrench"></i> Remediation Recommendations</h2>
+    </div>
+    {% for rem in parsed.remediations %}
+    <div class="remediation-card {{ rem.severity|lower }}">
+        <div class="rem-title">
+            <span class="badge badge-{{ rem.severity|lower }}" style="margin-right:8px">{{ rem.severity }}</span>
+            {{ rem.title }}
+        </div>
+        {% if rem.steps %}
+        <ul class="rem-steps">
+            {% for step in rem.steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Raw Report -->
+<div class="card animate-in">
+    <div class="section-header">
+        <h2><i class="fas fa-terminal"></i> Raw Assessment Report</h2>
+    </div>
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">{{ name }}</span>
+        </div>
+        <div class="terminal-body">
+            <pre>{{ content }}</pre>
+        </div>
+    </div>
+</div>
+
+<div style="display:flex;gap:12px;margin-top:20px">
+    <a href="/" class="btn btn-ghost">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+</div>
+
+{% endblock %}
